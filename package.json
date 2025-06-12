@@ -2,13 +2,15 @@
   "name": "website-crawler-tool",
   "version": "1.0.0",
   "description": "A Node.js CLI tool to crawl a website and run accessibility checks.",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "bin": {
-    "website-crawler": "./src/index.js"
+    "website-crawler": "./dist/index.js"
   },
   "scripts": {
-    "start": "node src/index.js",
-    "format": "prettier --write \"src/**/*.js\""
+    "start": "npm run build && node dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "format": "prettier --write \"src/**/*.ts\""
   },
   "repository": {
     "type": "git",
@@ -33,6 +35,10 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
-    "prettier": "^2.8.8"
+    "@types/node": "^24.0.1",
+    "@types/xml2js": "^0.4.14",
+    "prettier": "^2.8.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }

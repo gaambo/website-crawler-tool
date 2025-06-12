@@ -27,15 +27,16 @@ This tool is intended for use on websites that you own or have explicit permissi
 ## Installation
 
 1.  **Clone the repository:**
-```bash
+    ```bash
     git clone git@github.com:gaambo/website-crawler-tool.git
     cd website-crawler-tool
-```
+    ```
 
 2.  **Install dependencies:**
     ```bash
     npm install
     ```
+    This installs all necessary dependencies for running and developing the tool.
 
 ---
 
@@ -43,25 +44,44 @@ This tool is intended for use on websites that you own or have explicit permissi
 
 All options are configured via CLI flags.
 
-### Basic Example
+### Quick Start
 
-Crawl a website and run all default tests:
-
+**Crawl a website and run all default tests:**
 ```bash
 npm start -- --url https://example.com
 ```
-OR 
+
+**Example with more options:**
 ```bash
-node src/index.js --url https://example.com
+npm start -- --url https://example.com --sitemap https://example.com/sitemap.xml --checks headings --concurrency 10 --output ./reports
 ```
 
-### Advanced Example
+### For Development (Recommended for quick iteration)
 
-Crawl a site using its sitemap, run only the `headings` check with a concurrency of 10, and save the reports to a custom directory:
+Use `npm run dev` to execute the tool directly from TypeScript source using `ts-node`. This doesn't require a separate build step.
 
 ```bash
-node src/index.js --url https://example.com --sitemap https://example.com/sitemap.xml --checks headings --concurrency 10 --output ./reports
+npm run dev -- --url https://example.com
 ```
+
+### Using as a Global Command (Optional, for convenience)
+
+If you want to use `website-crawler` as a global command in your terminal:
+
+1.  **Build the project first:**
+    ```bash
+    npm run build
+    ```
+2.  **Link the package:**
+    ```bash
+    npm link
+    ```
+    Now you can run the tool using the `website-crawler` command:
+    ```bash
+    website-crawler --url https://example.com
+    ```
+    To unlink, you can run `npm unlink website-crawler-tool` in the project directory.
+
 
 ### CLI Options
 
@@ -75,6 +95,35 @@ node src/index.js --url https://example.com --sitemap https://example.com/sitema
 | `-v, --verbose`     | Enable verbose logging to see every URL being crawled.                      | `false`             |
 | `--ignore-robots`   | Ignore the `robots.txt` file and crawl all paths.                           | `false`             |
 | `-h, --help`        | Display the help menu.                                                      | -                   |
+
+---
+
+---
+
+## Development Workflow
+
+This project is written in TypeScript. The source files are located in the `src/` directory and compiled to JavaScript in the `dist/` directory (which is gitignored).
+
+### Key NPM Scripts
+
+-   **`npm run dev`**: Runs the crawler directly from TypeScript source using `ts-node`. This is generally the fastest way to test changes during development.
+    ```bash
+    npm run dev -- [options...]
+    ```
+-   **`npm run build`**: Compiles the TypeScript code from `src/` to JavaScript in `dist/`. This is necessary before using `npm link` or if you want to run the pure JavaScript version.
+    ```bash
+    npm run build
+    ```
+-   **`npm start`**: A convenience script that first runs `npm run build` and then executes the compiled application from `dist/index.js`. 
+    ```bash
+    npm start -- [options...]
+    ```
+-   **`npm run format`**: Formats the TypeScript code in the `src/` directory using Prettier.
+    ```bash
+    npm run format
+    ```
+
+For a full list of CLI options that can be passed after `--`, see the "CLI Options" section below.
 
 ---
 

@@ -2,7 +2,8 @@
 node_modules/
 
 # Output
-results/
+/results
+/dist
 
 # Logs
 npm-debug.log*
