@@ -61,8 +61,7 @@ class Crawler {
     this.axiosInstance = axios.create({
       timeout: 10000, // 10 second timeout
       headers: {
-        "User-Agent":
-          "gaambo-accessibility-crawler/1.0 (+https://github.com/gaambo)",
+        "User-Agent": "website-a11y-crawler/1.0 (+https://github.com/gaambo)",
       },
       maxRedirects: 5,
     });

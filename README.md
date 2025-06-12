@@ -1,4 +1,4 @@
-# gaambo-accessibility-crawler
+# Website Crawler Tool
 
 A Node.js CLI tool to crawl a website and run accessibility checks on all internal pages. It's designed to handle large sites efficiently by using concurrency controls and provides clear, actionable reports in CSV format.
 
