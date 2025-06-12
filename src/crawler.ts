@@ -120,6 +120,58 @@ class Crawler {
 
   private crawlAndQueue(url: string): void {
     // No longer async, does not return Promise
+
+    // Allow-list for file extensions likely to serve HTML content, or no extension (clean URLs).
+    const ALLOWED_EXTENSIONS = [
+      "html",
+      "htm",
+      "php",
+      "asp",
+      "aspx",
+      "jsp",
+      "do", // Common server-side script extensions
+      // Add any other specific extensions that commonly serve HTML in your target environments
+    ];
+
+    try {
+      const parsedUrl = new URL(url);
+      const pathName = parsedUrl.pathname;
+
+      // Check for a file extension in the last path segment
+      const lastSegment = pathName.substring(pathName.lastIndexOf("/") + 1);
+      const dotIndex = lastSegment.lastIndexOf(".");
+
+      if (dotIndex === -1 || dotIndex === 0) {
+        // No extension found (e.g., /about-us) or dot is at the beginning (e.g. /.well-known/)
+        // These are typically fine to crawl as they might be clean URLs or special paths.
+        // if (this.verbose && dotIndex === 0) {
+        //   console.log(`Processing URL with leading dot in last segment: ${url}`);
+        // } else if (this.verbose && dotIndex === -1) {
+        //   console.log(`Processing URL with no file extension: ${url}`);
+        // }
+      } else {
+        // Extension found
+        const extension = lastSegment.substring(dotIndex + 1).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.includes(extension)) {
+          if (this.verbose) {
+            console.log(
+              `Skipping URL with non-allowed file extension '.${extension}': ${url}`
+            );
+          }
+          return; // Skip processing this URL
+        }
+      }
+    } catch (e: any) {
+      // If URL parsing fails, it's likely an invalid URL. Log and skip.
+      if (this.verbose) {
+        console.error(
+          `Skipping invalid URL (cannot parse): ${url} - Error: ${e.message}`
+        );
+      }
+      this.results.errors.push({ url, message: `Invalid URL: ${e.message}` });
+      return;
+    }
+
     if (
       !this.robotsHandler.isAllowed(
         url,
