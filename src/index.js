@@ -31,6 +31,7 @@ program
 program.parse(process.argv);
 
 const Crawler = require("./crawler");
+const { checks, determineEnabledChecks } = require("./checks");
 
 async function main() {
   const options = program.opts();
@@ -44,7 +45,25 @@ async function main() {
     process.exit(1);
   }
 
-  const crawler = new Crawler(options);
+  const requestedCheckNames = options.checks ? options.checks.split(",") : [];
+  const enabledChecks = determineEnabledChecks(
+    requestedCheckNames,
+    options.verbose
+  );
+
+  if (enabledChecks.length === 0 && requestedCheckNames.length > 0) {
+    console.error("Error: No valid checks were selected. Aborting.");
+    console.log(
+      `Available checks are: ${checks.map((c) => c.name).join(", ")}`
+    );
+    process.exit(1);
+  }
+  // Pass the array of enabled check *objects* to the Crawler
+  const crawler = new Crawler({
+    ...options,
+    checks: enabledChecks,
+    availableChecksForOutput: checks,
+  });
   await crawler.start();
 }
 

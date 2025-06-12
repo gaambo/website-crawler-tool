@@ -2,10 +2,10 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const pLimit = require("p-limit");
 const { URL } = require("url");
-const xml2js = require("xml2js");
-
 const { writeResults } = require("./output");
-const robotsParser = require("robots-parser");
+const { parseSitemap } = require("./sitemap-parser");
+const PageProcessor = require("./page-processor");
+const RobotsHandler = require("./robots-handler");
 
 class Crawler {
   constructor(options) {
@@ -18,33 +18,38 @@ class Crawler {
     this.sitemapUrl = options.sitemap;
     this.verbose = options.verbose;
     this.ignoreRobots = options.ignoreRobots;
-    this.robots = null;
 
-    // Load and validate checks
-    this.availableChecks = this.loadChecks();
-    const requestedChecks = options.checks
-      ? options.checks.split(",")
-      : this.availableChecks.map((c) => c.name);
-    this.checks = this.validateChecks(requestedChecks);
-
-    // Initialize results object dynamically
-    this.results = {
-      errors: [],
-    };
-    this.checks.forEach((checkName) => {
-      this.results[checkName] = [];
-    });
-
+    // Initialize axiosInstance first as RobotsHandler and SitemapParser depend on it
     this.axiosInstance = axios.create({
       headers: {
         "User-Agent":
           "gaambo-accessibility-crawler/1.0 (+https://github.com/gaambo)",
       },
     });
+
+    this.robotsHandler = new RobotsHandler(this.axiosInstance, this.verbose);
+
+    // Enabled checks (array of objects) are now passed in options.checks
+    this.checks = options.checks;
+    this.availableChecksForOutput = options.availableChecksForOutput; // For report headers
+
+    // Initialize results object dynamically based on the names of the enabled checks
+    this.results = {
+      errors: [],
+    };
+    this.checks.forEach((checkObject) => {
+      this.results[checkObject.name] = [];
+    });
+
+    this.pageProcessor = new PageProcessor(
+      this.checks,
+      this.domain,
+      this.verbose
+    );
   }
 
   async start() {
-    await this.initializeRobotsParser();
+    await this.robotsHandler.initialize(this.baseURL, this.ignoreRobots);
     console.log(
       `Starting crawl on ${this.baseURL} with concurrency ${this.concurrency}`
     );
@@ -60,13 +65,16 @@ class Crawler {
     console.log(
       `Crawl finished. Visited ${this.visitedUrls.size} unique pages.`
     );
-    await writeResults(this.results, this.availableChecks, this.outputDir);
+    await writeResults(
+      this.results,
+      this.availableChecksForOutput,
+      this.outputDir
+    );
   }
 
   async crawlAndQueue(url) {
     if (
-      this.robots &&
-      !this.robots.isAllowed(
+      !this.robotsHandler.isAllowed(
         url,
         this.axiosInstance.defaults.headers["User-Agent"]
       )
@@ -97,30 +105,18 @@ class Crawler {
       const response = await this.axiosInstance.get(url);
       const $ = cheerio.load(response.data);
 
-      for (const check of this.availableChecks) {
-        if (this.checks.includes(check.name)) {
-          const issues = check.check($);
-          if (issues.length > 0) {
-            // Add the page URL to each issue
-            const issuesWithUrl = issues.map((issue) => ({ url, ...issue }));
-            this.results[check.name].push(...issuesWithUrl);
-          }
+      const { pageResults, newLinks: extractedLinks } =
+        this.pageProcessor.processPage(url, response.data);
+
+      // Merge page check results into main results
+      for (const checkName in pageResults) {
+        if (pageResults[checkName].length > 0) {
+          // this.results[checkName] should already be initialized
+          this.results[checkName].push(...pageResults[checkName]);
         }
       }
-
-      $("a[href]").each((i, link) => {
-        const href = $(link).attr("href");
-        if (!href) return;
-
-        try {
-          const absoluteUrl = new URL(href, url).href.split("#")[0];
-          if (this.isInternal(absoluteUrl)) {
-            newLinks.add(absoluteUrl);
-          }
-        } catch (e) {
-          // Ignore invalid URLs
-        }
-      });
+      // Add extracted links to the main newLinks set for this crawlPage call
+      extractedLinks.forEach((link) => newLinks.add(link));
     } catch (error) {
       this.results.errors.push({ url, message: error.message });
       if (this.verbose)
@@ -130,23 +126,21 @@ class Crawler {
   }
 
   async getInitialUrls() {
-    if (!this.sitemapUrl) {
-      return [this.baseURL];
+    if (this.sitemapUrl) {
+      const sitemapUrls = await parseSitemap(
+        this.sitemapUrl,
+        this.axiosInstance,
+        this.verbose
+      );
+      if (sitemapUrls.length > 0) {
+        return sitemapUrls;
+      }
+      if (this.verbose)
+        console.log(
+          "Sitemap was empty or failed to parse, falling back to base URL."
+        );
     }
-
-    console.log(`Fetching sitemap from ${this.sitemapUrl}`);
-    try {
-      const response = await this.axiosInstance.get(this.sitemapUrl);
-      const parser = new xml2js.Parser();
-      const result = await parser.parseStringPromise(response.data);
-      const urls = result.urlset.url.map((u) => u.loc[0]);
-      console.log(`Found ${urls.length} URLs in sitemap.`);
-      return urls;
-    } catch (error) {
-      console.error(`Failed to fetch or parse sitemap: ${error.message}`);
-      console.log("Falling back to crawling from base URL only.");
-      return [this.baseURL];
-    }
+    return [this.baseURL];
   }
 
   waitForIdle() {
@@ -172,67 +166,6 @@ class Crawler {
     process.stdout.write(
       `Crawled: ${crawledCount} | Queued: ${pendingCount} | Active: ${activeCount} \r`
     );
-  }
-
-  async initializeRobotsParser() {
-    if (this.ignoreRobots) {
-      if (this.verbose) console.log("Ignoring robots.txt");
-      return;
-    }
-
-    const robotsUrl = new URL("/robots.txt", this.baseURL).href;
-    if (this.verbose) console.log(`Fetching robots.txt from ${robotsUrl}`);
-
-    try {
-      const response = await this.axiosInstance.get(robotsUrl);
-      this.robots = robotsParser(robotsUrl, response.data);
-      if (this.verbose) console.log("Successfully parsed robots.txt");
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        if (this.verbose)
-          console.log("robots.txt not found. Crawling all paths.");
-      } else {
-        console.error(`Failed to fetch or parse robots.txt: ${error.message}`);
-      }
-      // If robots.txt is missing or fails to parse, we allow crawling all paths.
-      this.robots = null;
-    }
-  }
-
-  isInternal(url) {
-    try {
-      return new URL(url).hostname === this.domain;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  loadChecks() {
-    // This will automatically load and use src/checks/index.js
-    const checks = require("./checks");
-
-    if (this.verbose) {
-      console.log(`Loaded checks: ${checks.map((c) => c.name).join(", ")}`);
-    }
-
-    return checks;
-  }
-
-  validateChecks(requestedChecks) {
-    const availableCheckNames = this.availableChecks.map((c) => c.name);
-    const validChecks = requestedChecks.filter((checkName) => {
-      const isValid = availableCheckNames.includes(checkName);
-      if (!isValid) {
-        console.warn(`Warning: Unknown check '${checkName}' will be ignored.`);
-      }
-      return isValid;
-    });
-
-    if (this.verbose) {
-      console.log(`Enabled checks: ${validChecks.join(", ")}`);
-    }
-
-    return validChecks;
   }
 }
 
