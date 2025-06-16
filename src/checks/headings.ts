@@ -1,6 +1,4 @@
-// src/checks/headings.ts
-import * as cheerio from "cheerio"; // Use import * as
-import { CheerioAPI } from "cheerio"; // CheerioAPI is fine for the function signature
+import { CheerioAPI } from "cheerio";
 
 interface HeadingIssue {
   level: number;
@@ -9,7 +7,8 @@ interface HeadingIssue {
 }
 
 const headingsCheck = {
-  name: "Headings Check",
+  key: "headings",
+  name: "Heading Levels",
   description: "Checks for proper heading order (h1, h2, h3, etc.).",
   check: ($: CheerioAPI): HeadingIssue[] => {
     const issues: HeadingIssue[] = [];

@@ -22,6 +22,7 @@ export interface CheckFunction {
 
 // Define the structure of a Check object
 export interface Check {
+  key: string; // CLI-friendly, file-friendly identifier
   name: string;
   description: string;
   check: CheckFunction;
@@ -31,10 +32,10 @@ export interface Check {
 const allChecks: Check[] = [headingsCheck, imagesCheck];
 
 function determineEnabledChecks(
-  requestedCheckNames: string[] = [],
+  requestedChecks: string[] = [],
   verbose: boolean = false
 ): Check[] {
-  if (!requestedCheckNames || requestedCheckNames.length === 0) {
+  if (!requestedChecks || requestedChecks.length === 0) {
     if (verbose) {
       console.log(
         "No specific checks requested, enabling all available checks."
@@ -43,16 +44,15 @@ function determineEnabledChecks(
     return allChecks; // Return all available check objects
   }
 
-  const availableCheckNames = allChecks.map((c) => c.name);
   const enabledChecks: Check[] = [];
 
-  for (const requestedName of requestedCheckNames) {
-    const checkIndex = availableCheckNames.indexOf(requestedName);
-    if (checkIndex !== -1) {
-      enabledChecks.push(allChecks[checkIndex]);
+  for (const requestedCheck of requestedChecks) {
+    const found = allChecks.find((c) => c.key === requestedCheck);
+    if (found) {
+      enabledChecks.push(found);
     } else {
       console.warn(
-        `Warning: Unknown check '${requestedName}' will be ignored.`
+        `Warning: Unknown check '${requestedCheck}' will be ignored.`
       );
     }
   }
@@ -66,7 +66,4 @@ function determineEnabledChecks(
 }
 
 // To add a new check, import it here and add it to the allChecks array.
-export {
-  determineEnabledChecks,
-  allChecks as checks, // Exporting as 'checks' to match previous JS structure
-};
+export { determineEnabledChecks, allChecks as checks };

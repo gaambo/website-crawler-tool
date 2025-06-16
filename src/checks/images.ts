@@ -1,4 +1,3 @@
-// src/checks/images.ts
 import { CheerioAPI } from "cheerio";
 
 interface ImageIssue {
@@ -8,7 +7,8 @@ interface ImageIssue {
 }
 
 const imagesCheck = {
-  name: "Images Check",
+  key: "images",
+  name: "Images Alt Text",
   description: "Checks for images with missing or empty alt attributes.",
   check: ($: CheerioAPI): ImageIssue[] => {
     const issues: ImageIssue[] = [];

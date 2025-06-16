@@ -18,8 +18,8 @@ This tool is intended for use on websites that you own or have explicit permissi
 - **Sitemap Support**: Optionally, you can provide a sitemap URL to define the scope of the crawl.
 - **Configurable Concurrency**: Control the number of parallel requests to manage load.
 - **Accessibility Checks**:
-  - **Heading Order Check**: Detects skipped heading levels (e.g., an `h1` followed by an `h3`).
-  - **Image Alt-Text Check**: Ensures all `<img>` tags have a non-empty `alt` attribute.
+  - **Heading Levels Check** (`headings`): Detects skipped heading levels (e.g., an `h1` followed by an `h3`).
+  - **Images Alt Text Check** (`images`): Ensures all `<img>` tags have a non-empty `alt` attribute.
 - **CSV Reports**: Generates a separate CSV file for each accessibility test, plus a report for any HTTP or network errors encountered during the crawl.
 
 ---
@@ -54,6 +54,11 @@ npm start -- --url https://example.com
 **Example with more options:**
 ```bash
 npm start -- --url https://example.com --sitemap https://example.com/sitemap.xml --checks headings --concurrency 10 --output ./reports
+```
+
+**Run a single check by key:**
+```bash
+npm start -- --url https://example.com --checks images
 ```
 
 ### For Development (Recommended for quick iteration)
@@ -129,8 +134,14 @@ For a full list of CLI options that can be passed after `--`, see the "CLI Optio
 
 ## Output
 
-The tool generates the following CSV files in the specified output directory:
+The tool generates the following CSV files in the specified output directory. File names match the check key:
 
 -   `headings.csv`: Lists all pages with skipped heading levels.
 -   `images.csv`: Lists all pages with images that have missing or empty `alt` attributes.
 -   `errors.csv`: Lists all URLs that could not be crawled due to network or HTTP errors.
+
+> **Note:** Use the check key (e.g., `headings`, `images`) in the `--checks` CLI flag and to identify output files.
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for details about recent updates.

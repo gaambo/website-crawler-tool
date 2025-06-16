@@ -41,8 +41,7 @@ export async function writeResults(
 
   // Write results for each check
   for (const check of availableChecks) {
-    const checkName = check.name;
-    const checkResults = results[checkName];
+    const checkResults = results[check.key];
 
     if (checkResults && checkResults.length > 0) {
       // Construct CSV headers: 'url' first, then specific check headers
@@ -52,20 +51,13 @@ export async function writeResults(
       ];
 
       const csvWriter = createObjectCsvWriter({
-        path: path.join(
-          outputDir,
-          `${checkName.toLowerCase().replace(/\s+/g, "_")}.csv`
-        ),
+        path: path.join(outputDir, `${check.key}.csv`),
         header: reportHeaders,
         alwaysQuote: true,
       });
 
       await csvWriter.writeRecords(checkResults);
-      console.log(
-        `${checkName} report saved to ${checkName
-          .toLowerCase()
-          .replace(/\s+/g, "_")}.csv`
-      );
+      console.log(`${check.name} report saved to ${check.key}.csv`);
     }
   }
   console.log(`All reports saved in ${outputDir}`);
