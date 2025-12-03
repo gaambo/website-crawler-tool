@@ -5,12 +5,19 @@
 ### Added
 
 - **URL List Support**: New `-l, --url-list <file>` option to crawl a specific list of URLs without recursion.
-- **URL List Parser**: Support for JSON and CSV file formats containing URL lists.
-- **Non-Recursive Mode**: When using URL lists, the crawler only processes the specified URLs and does not discover new ones.
+  - **URL List Parser**: Support for JSON and CSV file formats containing URL lists.
+  - **Non-Recursive Mode**: When using URL lists, the crawler only processes the specified URLs and does not discover new ones.
+- **Redirect Check**: New `redirects` check that detects URL redirects and captures initial redirect status codes.
+  - **Redirect Status Capture**: Reports the initial HTTP status code (301, 302, etc.) used for redirection.
+  - **Redirect Chain Information**: Captures original URL, final URL, status code, and redirect chain in CSV output.
+
+### Changed
+
+- **Async Check Support**: Updated check architecture to support async functions for HTTP-level checks.
 
 ### Documentation
 
-- Updated CLI options table to include the new URL list option.
+- Add `AGENTS.md` file.
 
 ---
 
