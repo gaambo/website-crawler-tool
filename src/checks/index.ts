@@ -2,6 +2,7 @@
 import { CheerioAPI } from "cheerio";
 import headingsCheck from "./headings";
 import imagesCheck from "./images";
+import redirectsCheck from "./redirects";
 
 // Define the structure of a CSV header
 export interface CsvHeader {
@@ -17,7 +18,9 @@ export interface CheckIssueBase {
 
 // Define the signature for a check function
 export interface CheckFunction {
-  ($: CheerioAPI, pageUrl?: string): CheckIssueBase[];
+  ($: CheerioAPI, pageUrl?: string):
+    | CheckIssueBase[]
+    | Promise<CheckIssueBase[]>;
 }
 
 // Define the structure of a Check object
@@ -29,7 +32,7 @@ export interface Check {
   csvHeaders: CsvHeader[];
 }
 
-const allChecks: Check[] = [headingsCheck, imagesCheck];
+const allChecks: Check[] = [headingsCheck, imagesCheck, redirectsCheck];
 
 function determineEnabledChecks(
   requestedChecks: string[] = [],

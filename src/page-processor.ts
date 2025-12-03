@@ -27,7 +27,10 @@ class PageProcessor {
     this.verbose = verbose;
   }
 
-  processPage(url: string, htmlContent: string): ProcessedPageData {
+  async processPage(
+    url: string,
+    htmlContent: string
+  ): Promise<ProcessedPageData> {
     const $ = cheerio.load(htmlContent);
     const pageResults: PageResults = {};
     const newLinksSet: Set<string> = new Set();
@@ -35,15 +38,15 @@ class PageProcessor {
     // Run enabled checks
     for (const check of this.enabledChecks) {
       try {
-        const issues = check.check($, url); // Pass URL to checks if they need it
+        const issues = await check.check($, url); // Pass URL to checks if they need it
         if (issues.length > 0) {
           // Add the page URL to each issue before storing if not already present
           // (Our current checks don't add it, PageProcessor used to, let's ensure it's there)
           const issuesWithUrl = issues.map((issue) => ({ url, ...issue }));
-          if (!pageResults[check.name]) {
-            pageResults[check.name] = [];
+          if (!pageResults[check.key]) {
+            pageResults[check.key] = [];
           }
-          pageResults[check.name].push(...issuesWithUrl);
+          pageResults[check.key].push(...issuesWithUrl);
         }
       } catch (e: any) {
         console.error(

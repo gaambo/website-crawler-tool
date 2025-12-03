@@ -80,7 +80,7 @@ class Crawler {
 
     this.results = { errors: [] };
     this.checks.forEach((checkObject) => {
-      this.results[checkObject.name] = [];
+      this.results[checkObject.key] = [];
     });
   }
 
@@ -226,7 +226,7 @@ class Crawler {
       // const $ = cheerio.load(response.data); // Not needed directly in Crawler anymore
 
       const { pageResults, newLinks: extractedLinks } =
-        this.pageProcessor.processPage(url, response.data);
+        await this.pageProcessor.processPage(url, response.data);
 
       for (const checkName in pageResults) {
         if (pageResults[checkName].length > 0) {
