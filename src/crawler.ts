@@ -14,6 +14,7 @@ interface CrawlerOptions {
   concurrency: string | number; // commander might pass string
   output: string;
   sitemap?: string;
+  urlList?: string[];
   verbose?: boolean;
   ignoreRobots?: boolean;
   checks: Check[]; // Array of enabled check objects
@@ -33,14 +34,16 @@ class Crawler {
   private visitedUrls: Set<string>;
   private outputDir: string;
   private sitemapUrl?: string;
+  private urlList?: string[];
   private verbose: boolean;
   private ignoreRobots: boolean;
   private axiosInstance: AxiosInstance;
   private robotsHandler: RobotsHandler;
   private pageProcessor: PageProcessor;
   private checks: Check[]; // Enabled checks
-  private availableChecksForOutput: Check[]; // All checks for output module
+  private availableChecksForOutput: Check[]; // All checks for output
   private results: CrawlResults;
+  private isNonRecursive: boolean;
 
   constructor(options: CrawlerOptions) {
     this.baseURL = options.url;
@@ -53,10 +56,12 @@ class Crawler {
     this.visitedUrls = new Set<string>();
     this.outputDir = options.output;
     this.sitemapUrl = options.sitemap;
+    this.urlList = options.urlList;
     this.verbose = options.verbose || false;
     this.ignoreRobots = options.ignoreRobots || false;
     this.checks = options.checks;
     this.availableChecksForOutput = options.availableChecksForOutput;
+    this.isNonRecursive = !!options.urlList;
 
     this.axiosInstance = axios.create({
       timeout: 10000, // 10 second timeout
@@ -209,7 +214,9 @@ class Crawler {
   private async processUrl(url: string): Promise<void> {
     if (this.verbose) console.log(`Processing: ${url}`);
     const newLinks = await this.crawlPage(url);
-    newLinks.forEach((link) => this.crawlAndQueue(link)); // Queue new links without await
+    if (!this.isNonRecursive) {
+      newLinks.forEach((link) => this.crawlAndQueue(link)); // Queue new links without await
+    }
   }
 
   private async crawlPage(url: string): Promise<string[]> {
@@ -236,6 +243,10 @@ class Crawler {
   }
 
   private async getInitialUrls(): Promise<string[]> {
+    if (this.urlList) {
+      return this.urlList;
+    }
+
     if (this.sitemapUrl) {
       const sitemapUrls = await parseSitemap(
         this.sitemapUrl,
