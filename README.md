@@ -15,7 +15,7 @@ This tool is intended for use on websites that you own or have explicit permissi
 ## Features
 
 - **Recursive Crawling**: Starts from a base URL and recursively crawls all internal links.
-- **Sitemap Support**: Optionally, you can provide a sitemap URL to define the scope of the crawl.
+- **Sitemap Support**: Optionally, you can provide a sitemap URL to define the scope of the crawl (supports both `sitemap.xml` and `sitemap_index.xml`).
 - **URL List Support**: Provide a specific list of URLs to crawl without recursion (JSON or CSV format).
 - **Configurable Concurrency**: Control the number of parallel requests to manage load.
 - **Accessibility Checks**:
