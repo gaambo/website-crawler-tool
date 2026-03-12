@@ -22,6 +22,7 @@ This tool is intended for use on websites that you own or have explicit permissi
   - **Heading Levels Check** (`headings`): Detects skipped heading levels (e.g., an `h1` followed by an `h3`).
   - **Images Alt Text Check** (`images`): Ensures all `<img>` tags have a non-empty `alt` attribute.
   - **URL Redirects Check** (`redirects`): Detects URL redirects and captures initial redirect status codes (301, 302, etc.).
+  - **SEO Meta Check** (`seo-meta`): Extracts common SEO metadata (title, description, canonical, robots, Open Graph, Twitter cards, hreflang alternates).
 - **CSV Reports**: Generates a separate CSV file for each accessibility test, plus a report for any HTTP or network errors encountered during the crawl.
 
 ---
@@ -166,7 +167,8 @@ The tool generates the following CSV files in the specified output directory. Fi
 - `headings.csv`: Lists all pages with skipped heading levels.
 - `images.csv`: Lists all pages with images that have missing or empty `alt` attributes.
 - `redirects.csv`: Lists all URLs that redirect with initial status codes and final destinations.
-- `errors.csv`: Lists all URLs that could not be crawled due to network or HTTP errors.
+- `seo-meta.csv`: One row per URL with extracted SEO metadata.
+- `crawl_errors.csv`: Lists all URLs that could not be crawled due to network or HTTP errors.
 
 > **Note:** Use the check key (e.g., `headings`, `images`) in the `--checks` CLI flag and to identify output files.
 

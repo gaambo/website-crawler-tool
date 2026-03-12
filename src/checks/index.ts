@@ -3,6 +3,7 @@ import { CheerioAPI } from "cheerio";
 import headingsCheck from "./headings";
 import imagesCheck from "./images";
 import redirectsCheck from "./redirects";
+import seoMetaCheck from "./seo-meta";
 
 // Define the structure of a CSV header
 export interface CsvHeader {
@@ -32,7 +33,12 @@ export interface Check {
   csvHeaders: CsvHeader[];
 }
 
-const allChecks: Check[] = [headingsCheck, imagesCheck, redirectsCheck];
+const allChecks: Check[] = [
+  headingsCheck,
+  imagesCheck,
+  redirectsCheck,
+  seoMetaCheck,
+];
 
 function determineEnabledChecks(
   requestedChecks: string[] = [],
