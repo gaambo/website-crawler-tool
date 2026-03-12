@@ -1,8 +1,10 @@
 # Dependencies
 node_modules/
+.local
 
 # Output
 /results
+/reports
 /dist
 
 # Logs
