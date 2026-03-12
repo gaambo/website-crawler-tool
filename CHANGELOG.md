@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.3.0
+
+### Added
+
+- **SEO Meta Check**: New `seo-meta` check that extracts common SEO metadata (title, description, canonical, robots, Open Graph, Twitter cards, hreflang) into `seo-meta.csv`.
+- **Collect URLs Check**: New `collect` check to only collect URLs.
+- **Sitemap Index Support**: The `--sitemap` option now supports sitemap indexes (e.g., `sitemap_index.xml`) and resolves nested sitemaps.
+
+### Changed
+
+- **CLI Output UI**: Improved progress and report output with an interactive spinner and colorized counters when running in a TTY.
+- **ESM + Dev Runner**: Project is now ESM (`"type": "module"`) and the development workflow uses `tsx` (`npm run dev`).
+
+---
+
 ## v1.2.0
 
 ### Added
