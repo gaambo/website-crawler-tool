@@ -4,6 +4,8 @@
 
 Node.js CLI tool that crawls websites and performs accessibility checks. Built with TypeScript, outputs CSV reports, supports recursive crawling, sitemaps, and URL lists.
 
+Runtime requirement: Node.js >= 20.
+
 ## Architecture
 
 Modular TypeScript structure in `src/`:
@@ -25,7 +27,7 @@ Modular TypeScript structure in `src/`:
 
 ## Commands
 
-- `npm run dev` - Run from TypeScript source (use for testing)
+- `npm run dev` - Run from TypeScript source via `tsx` (use for testing)
 - `npm run build` - Compile TypeScript to JavaScript
 - `npm start` - Build then run compiled version
 - `npm run format` - Format code with Prettier

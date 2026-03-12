@@ -30,6 +30,10 @@ This tool is intended for use on websites that you own or have explicit permissi
 
 ## Installation
 
+### Prerequisites
+
+- Node.js >= 20 (required by runtime dependencies)
+
 1.  **Clone the repository:**
 
     ```bash
@@ -83,7 +87,7 @@ npm start -- --url-list urls.json --checks headings
 
 ### For Development (Recommended for quick iteration)
 
-Use `npm run dev` to execute the tool directly from TypeScript source using `ts-node`. This doesn't require a separate build step.
+Use `npm run dev` to execute the tool directly from TypeScript source using `tsx`. This doesn't require a separate build step.
 
 ```bash
 npm run dev -- --url https://example.com
@@ -146,7 +150,7 @@ This project is written in TypeScript. The source files are located in the `src/
 
 ### Key NPM Scripts
 
-- **`npm run dev`**: Runs the crawler directly from TypeScript source using `ts-node`. This is generally the fastest way to test changes during development.
+- **`npm run dev`**: Runs the crawler directly from TypeScript source using `tsx`. This is generally the fastest way to test changes during development.
   ```bash
   npm run dev -- [options...]
   ```

@@ -1,4 +1,4 @@
-import { Check } from "./index";
+import { Check } from "./index.js";
 
 const collectCheck: Check = {
   key: "collect",

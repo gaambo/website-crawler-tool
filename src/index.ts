@@ -20,10 +20,13 @@ process.on("uncaughtException", (error) => {
 });
 
 import { Command } from "commander";
-import Crawler from "./crawler";
-import { checks as availableChecks, determineEnabledChecks } from "./checks"; // Renamed 'checks' to 'availableChecks' for clarity here
-import { ensureOutputDirectory } from "./output"; // ensureOutputDirectory is used implicitly by writeResults, but good to have if needed directly
-import { parseUrlList } from "./url-list-parser";
+import Crawler from "./crawler.js";
+import {
+  checks as availableChecks,
+  determineEnabledChecks,
+} from "./checks/index.js"; // Renamed 'checks' to 'availableChecks' for clarity here
+import { ensureOutputDirectory } from "./output.js"; // ensureOutputDirectory is used implicitly by writeResults, but good to have if needed directly
+import { parseUrlList } from "./url-list-parser.js";
 
 // Define an interface for the command line options
 interface CliOptions {

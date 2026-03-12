@@ -1,7 +1,7 @@
 // src/page-processor.ts
 import * as cheerio from "cheerio"; // Use import * as for cheerio
 import { URL } from "url";
-import { Check, CheckIssueBase } from "./checks"; // Import our Check type
+import { Check, CheckIssueBase } from "./checks/index.js"; // Import our Check type
 
 interface PageResults {
   [checkName: string]: CheckIssueBase[];

@@ -3,11 +3,11 @@ import axios, { AxiosInstance } from "axios";
 import * as cheerio from "cheerio";
 import pLimit, { Limit } from "p-limit";
 import { URL } from "url";
-import { writeResults } from "./output";
-import { parseSitemap } from "./sitemap-parser";
-import PageProcessor from "./page-processor";
-import RobotsHandler from "./robots-handler";
-import { Check, CheckIssueBase } from "./checks";
+import { writeResults } from "./output.js";
+import { parseSitemap } from "./sitemap-parser.js";
+import PageProcessor from "./page-processor.js";
+import RobotsHandler from "./robots-handler.js";
+import { Check, CheckIssueBase } from "./checks/index.js";
 
 interface CrawlerOptions {
   url: string;

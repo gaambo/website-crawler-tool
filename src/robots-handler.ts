@@ -1,5 +1,6 @@
-// src/robots-handler.ts
-import robotsParser, { Robot } from "robots-parser"; // Use Robot type as suggested
+// Note: `robots-parser` ships CJS + types that can confuse TypeScript under `moduleResolution: NodeNext`.
+// We use a local `.d.ts` shim via `tsconfig.json` `paths` so `tsc` understands the callable default export + `Robot` type.
+import robotsParser, { type Robot } from "robots-parser";
 import { AxiosInstance } from "axios";
 import { URL } from "url";
 

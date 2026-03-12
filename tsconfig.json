@@ -1,23 +1,28 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "commonjs",
+    "target": "ES2022",
+    "module": "NodeNext",
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "robots-parser": ["./src/types/robots-parser"]
+    },
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "sourceMap": true, // Useful for debugging
     "declaration": true // Generates .d.ts files, good for libraries but optional for CLIs
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts", 
+    "src/**/*.d.ts"
   ],
   "exclude": [
-    "node_modules",
+    "node_modules", 
     "dist"
   ]
 }

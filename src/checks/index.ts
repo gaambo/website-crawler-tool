@@ -1,10 +1,10 @@
 // src/checks/index.ts
 import { CheerioAPI } from "cheerio";
-import headingsCheck from "./headings";
-import imagesCheck from "./images";
-import redirectsCheck from "./redirects";
-import seoMetaCheck from "./seo-meta";
-import collectCheck from "./collect";
+import headingsCheck from "./headings.js";
+import imagesCheck from "./images.js";
+import redirectsCheck from "./redirects.js";
+import seoMetaCheck from "./seo-meta.js";
+import collectCheck from "./collect.js";
 
 // Define the structure of a CSV header
 export interface CsvHeader {

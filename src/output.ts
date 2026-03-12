@@ -2,7 +2,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { createObjectCsvWriter } from "csv-writer";
-import { Check, CsvHeader, CheckIssueBase } from "./checks"; // Import types from checks/index.ts
+import { Check, CsvHeader, CheckIssueBase } from "./checks/index.js";
 
 interface ResultsObject {
   errors: CheckIssueBase[]; // Assuming errors will also have a 'url' and 'message'
