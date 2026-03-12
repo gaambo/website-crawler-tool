@@ -1,6 +1,5 @@
 // src/crawler.ts
 import axios, { AxiosInstance } from "axios";
-import * as cheerio from "cheerio";
 import pLimit, { Limit } from "p-limit";
 import { URL } from "url";
 import { writeResults } from "./output.js";
@@ -8,6 +7,7 @@ import { parseSitemap } from "./sitemap-parser.js";
 import PageProcessor from "./page-processor.js";
 import RobotsHandler from "./robots-handler.js";
 import { Check, CheckIssueBase } from "./checks/index.js";
+import { CliUi } from "./cli-ui.js";
 
 interface CrawlerOptions {
   url: string;
@@ -44,6 +44,8 @@ class Crawler {
   private availableChecksForOutput: Check[]; // All checks for output
   private results: CrawlResults;
   private isNonRecursive: boolean;
+  private isInteractiveTerminal: boolean;
+  private ui: CliUi;
 
   constructor(options: CrawlerOptions) {
     this.baseURL = options.url;
@@ -62,6 +64,11 @@ class Crawler {
     this.checks = options.checks;
     this.availableChecksForOutput = options.availableChecksForOutput;
     this.isNonRecursive = !!options.urlList;
+    this.isInteractiveTerminal = !!process.stdout.isTTY;
+    this.ui = new CliUi({
+      verbose: this.verbose,
+      isInteractiveTerminal: this.isInteractiveTerminal,
+    });
 
     this.axiosInstance = axios.create({
       timeout: 10000, // 10 second timeout
@@ -85,40 +92,47 @@ class Crawler {
   }
 
   async start(): Promise<void> {
-    if (this.verbose) {
-      console.log(
-        `Starting crawl on ${this.baseURL} with concurrency ${this.concurrency}`
-      );
-    }
+    this.ui.verboseLog(
+      `Starting crawl on ${this.baseURL} with concurrency ${this.concurrency}`
+    );
     await this.robotsHandler.initialize(this.baseURL, this.ignoreRobots);
 
     const initialUrls = await this.getInitialUrls();
     if (initialUrls.length === 0) {
-      console.log("No initial URLs to crawl.");
+      this.ui.log("No initial URLs to crawl.");
       return;
     }
 
     initialUrls.forEach((url) => this.crawlAndQueue(url));
 
+    if (!this.verbose && this.isInteractiveTerminal) {
+      this.ui.startCrawlerProgressSpinner(this.getProgressStats());
+    }
+
     // Main loop to wait for all crawling tasks to complete.
     // It monitors p-limit's activeCount (tasks currently running) and pendingCount (tasks in the queue).
     // The loop continues as long as there's work to be done or in the queue.
     // This is essential for handling dynamically added tasks (new links found during crawl).
-    if (this.verbose)
-      console.log("Initial URLs queued. Monitoring task completion...");
+    this.ui.verboseLog("Initial URLs queued. Monitoring task completion...");
     while (this.limit.activeCount > 0 || this.limit.pendingCount > 0) {
       this.logProgress();
       await new Promise((resolve) => setTimeout(resolve, 250)); // Check every 250ms
     }
     this.logProgress(); // Final log update
 
-    console.log(
-      `\nCrawl finished. Visited ${this.visitedUrls.size} unique pages.`
+    this.ui.stopSpinner();
+
+    this.ui.log(
+      this.ui.formatCrawlFinished(
+        this.visitedUrls.size,
+        this.results.errors.length
+      )
     );
     await writeResults(
       this.results,
       this.availableChecksForOutput,
-      this.outputDir
+      this.outputDir,
+      this.ui
     );
   }
 
@@ -158,7 +172,7 @@ class Crawler {
         const extension = lastSegment.substring(dotIndex + 1).toLowerCase();
         if (!ALLOWED_EXTENSIONS.includes(extension)) {
           if (this.verbose) {
-            console.log(
+            this.ui.verboseLog(
               `Skipping URL with non-allowed file extension '.${extension}': ${url}`
             );
           }
@@ -168,7 +182,7 @@ class Crawler {
     } catch (e: any) {
       // If URL parsing fails, it's likely an invalid URL. Log and skip.
       if (this.verbose) {
-        console.error(
+        this.ui.verboseError(
           `Skipping invalid URL (cannot parse): ${url} - Error: ${e.message}`
         );
       }
@@ -183,7 +197,7 @@ class Crawler {
       )
     ) {
       if (this.verbose) {
-        console.log(`Skipping disallowed URL: ${url}`);
+        this.ui.verboseLog(`Skipping disallowed URL: ${url}`);
       }
       return;
     }
@@ -199,10 +213,9 @@ class Crawler {
     // This ensures that a failure on one page doesn't stop the entire crawl.
     // Errors are logged and added to the results.errors array for reporting.
     this.limit(() => this.processUrl(url)).catch((err) => {
-      if (this.verbose)
-        console.error(
-          `Error processing task for ${url} in p-limit: ${err.message}`
-        );
+      this.ui.verboseError(
+        `Error processing task for ${url} in p-limit: ${err.message}`
+      );
       // Optionally, add to a general error list or handle more gracefully
       this.results.errors.push({
         url,
@@ -212,7 +225,7 @@ class Crawler {
   }
 
   private async processUrl(url: string): Promise<void> {
-    if (this.verbose) console.log(`Processing: ${url}`);
+    this.ui.verboseLog(`Processing: ${url}`);
     const newLinks = await this.crawlPage(url);
     if (!this.isNonRecursive) {
       newLinks.forEach((link) => this.crawlAndQueue(link)); // Queue new links without await
@@ -236,8 +249,7 @@ class Crawler {
       extractedLinks.forEach((link) => newLinksFound.add(link));
     } catch (error: any) {
       this.results.errors.push({ url, message: error.message });
-      if (this.verbose)
-        console.error(`Error crawling ${url}: ${error.message}`);
+      this.ui.verboseError(`Error crawling ${url}: ${error.message}`);
     }
     return [...newLinksFound];
   }
@@ -256,21 +268,29 @@ class Crawler {
       if (sitemapUrls.length > 0) {
         return sitemapUrls;
       }
-      if (this.verbose)
-        console.log(
-          "Sitemap was empty or failed to parse, falling back to base URL."
-        );
+      this.ui.verboseLog(
+        "Sitemap was empty or failed to parse, falling back to base URL."
+      );
     }
     return [this.baseURL];
   }
 
   private logProgress(): void {
-    const crawledCount = this.visitedUrls.size;
-    const pendingCount = this.limit.pendingCount;
-    const activeCount = this.limit.activeCount;
-    process.stdout.write(
-      `Crawled: ${crawledCount} | Queued: ${pendingCount} | Active: ${activeCount} \r`
-    );
+    this.ui.renderCrawlerProgress(this.getProgressStats());
+  }
+
+  private getProgressStats(): {
+    crawledCount: number;
+    pendingCount: number;
+    activeCount: number;
+    errorCount: number;
+  } {
+    return {
+      crawledCount: this.visitedUrls.size,
+      pendingCount: this.limit.pendingCount,
+      activeCount: this.limit.activeCount,
+      errorCount: this.results.errors.length,
+    };
   }
 }
 

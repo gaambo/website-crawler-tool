@@ -3,6 +3,12 @@ import * as fs from "fs";
 import * as path from "path";
 import { createObjectCsvWriter } from "csv-writer";
 import { Check, CsvHeader, CheckIssueBase } from "./checks/index.js";
+import {
+  CliUi,
+  formatAllReportsSaved,
+  formatCrawlErrorsSaved,
+  formatReportSaved,
+} from "./cli-ui.js";
 
 interface ResultsObject {
   errors: CheckIssueBase[]; // Assuming errors will also have a 'url' and 'message'
@@ -20,9 +26,12 @@ export function ensureOutputDirectory(outputDir: string): void {
 export async function writeResults(
   results: ResultsObject,
   availableChecks: Check[],
-  outputDir: string
+  outputDir: string,
+  ui?: CliUi
 ): Promise<void> {
   ensureOutputDirectory(outputDir);
+
+  const useColor = ui?.getInteractiveTerminal() ?? !!process.stdout.isTTY;
 
   // Write errors to a separate CSV
   if (results.errors && results.errors.length > 0) {
@@ -36,7 +45,14 @@ export async function writeResults(
       alwaysQuote: true,
     });
     await errorWriter.writeRecords(results.errors);
-    console.log(`Crawl errors report saved to crawl_errors.csv`);
+
+    const message = formatCrawlErrorsSaved(
+      results.errors.length,
+      "crawl_errors.csv",
+      useColor
+    );
+    if (ui) ui.log(message);
+    else console.log(message);
   }
 
   // Write results for each check
@@ -57,8 +73,18 @@ export async function writeResults(
       });
 
       await csvWriter.writeRecords(checkResults);
-      console.log(`${check.name} report saved to ${check.key}.csv`);
+
+      const message = formatReportSaved(
+        check.name,
+        `${check.key}.csv`,
+        useColor
+      );
+      if (ui) ui.log(message);
+      else console.log(message);
     }
   }
-  console.log(`All reports saved in ${outputDir}`);
+
+  const finalMessage = formatAllReportsSaved(outputDir, useColor);
+  if (ui) ui.log(finalMessage);
+  else console.log(finalMessage);
 }
