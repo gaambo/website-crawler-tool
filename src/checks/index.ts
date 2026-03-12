@@ -4,6 +4,7 @@ import headingsCheck from "./headings";
 import imagesCheck from "./images";
 import redirectsCheck from "./redirects";
 import seoMetaCheck from "./seo-meta";
+import collectCheck from "./collect";
 
 // Define the structure of a CSV header
 export interface CsvHeader {
@@ -38,6 +39,7 @@ const allChecks: Check[] = [
   imagesCheck,
   redirectsCheck,
   seoMetaCheck,
+  collectCheck,
 ];
 
 function determineEnabledChecks(

@@ -23,6 +23,7 @@ This tool is intended for use on websites that you own or have explicit permissi
   - **Images Alt Text Check** (`images`): Ensures all `<img>` tags have a non-empty `alt` attribute.
   - **URL Redirects Check** (`redirects`): Detects URL redirects and captures initial redirect status codes (301, 302, etc.).
   - **SEO Meta Check** (`seo-meta`): Extracts common SEO metadata (title, description, canonical, robots, Open Graph, Twitter cards, hreflang alternates).
+  - **Collect URLs** (`collect`): Outputs one row per crawled URL (no additional columns).
 - **CSV Reports**: Generates a separate CSV file for each accessibility test, plus a report for any HTTP or network errors encountered during the crawl.
 
 ---
@@ -66,6 +67,12 @@ npm start -- --url https://example.com --sitemap https://example.com/sitemap.xml
 
 ```bash
 npm start -- --url https://example.com --checks images
+```
+
+**Collect crawled URLs only:**
+
+```bash
+npm start -- --url https://example.com --checks collect
 ```
 
 **Crawl a specific list of URLs (non-recursive):**
