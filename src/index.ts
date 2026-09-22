@@ -38,6 +38,8 @@ interface CliOptions {
   verbose?: boolean;
   ignoreRobots?: boolean;
   checks?: string; // Comma-separated string of check names
+  dedupeImages?: boolean;
+  imageSuffixPattern?: string;
 }
 
 const program = new Command();
@@ -61,6 +63,14 @@ program
   .option(
     "-k, --checks <list>",
     "Comma-separated list of checks to run (e.g., Headings,Images). Runs all if not specified."
+  )
+  .option(
+    "--dedupe-images",
+    "Keep one occurrence of each image URL in image-inventory output."
+  )
+  .option(
+    "--image-suffix-pattern <regex>",
+    "Remove this regex suffix from image filenames before their extension."
   );
 
 program.parse(process.argv);

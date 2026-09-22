@@ -24,6 +24,7 @@ This tool is intended for use on websites that you own or have explicit permissi
   - **URL Redirects Check** (`redirects`): Detects URL redirects and captures initial redirect status codes (301, 302, etc.).
   - **SEO Meta Check** (`seo-meta`): Extracts common SEO metadata (title, description, canonical, robots, Open Graph, Twitter cards, hreflang alternates).
   - **Collect URLs** (`collect`): Outputs one row per crawled URL (no additional columns).
+  - **Image Inventory** (`image-inventory`): Lists image URLs found in HTML image elements, `srcset` attributes, and inline styles.
 - **CSV Reports**: Generates a separate CSV file for each accessibility test, plus a report for any HTTP or network errors encountered during the crawl.
 
 ---
@@ -79,6 +80,36 @@ npm start -- --url https://example.com --checks images
 npm start -- --url https://example.com --checks collect
 ```
 
+**Collect image URLs, keeping repeated occurrences:**
+
+```bash
+npm start -- --url-list urls.csv --checks image-inventory
+```
+
+**Collect one row per unique image URL:**
+
+```bash
+npm start -- --url-list urls.csv --checks image-inventory --dedupe-images
+```
+
+**Remove WordPress size suffixes before the file extension:**
+
+```bash
+npm start -- --url-list urls.csv --checks image-inventory \
+  --image-suffix-pattern "-[0-9]+x[0-9]+"
+```
+
+This turns WordPress image variants such as `photo-300x200.jpg` into
+`photo.jpg` before deduplication.
+
+The image inventory reads `<img>` and `<picture><source>` URLs from `src`,
+`srcset`, and common lazy-load attributes. It also reads `url(...)` references
+from inline `background` and `background-image` styles. It does not parse linked
+stylesheets or images added later by JavaScript. Each CSV row includes the page
+URL, resolved image URL, source element and attribute, and original value.
+Repeated occurrences are kept unless `--dedupe-images` is set. Suffix removal
+runs before deduplication.
+
 **Crawl a specific list of URLs (non-recursive):**
 
 ```bash
@@ -113,17 +144,19 @@ If you want to use `website-crawler` as a global command in your terminal:
 
 ### CLI Options
 
-| Flag                      | Description                                            | Default              |
-| ------------------------- | ------------------------------------------------------ | -------------------- |
-| `-u, --url <url>`         | The base URL to start crawling from.                   | -                    |
-| `-s, --sitemap <url>`     | The URL of the sitemap.xml file to use for crawling.   | -                    |
-| `-l, --url-list <file>`   | File containing list of URLs to crawl (JSON or CSV).   | -                    |
-| `-k, --checks <list>`     | A comma-separated list of checks to run.               | All available checks |
-| `-c, --concurrency <num>` | The number of concurrent requests to make.             | `5`                  |
-| `-o, --output <dir>`      | The directory where CSV reports will be saved.         | `./results`          |
-| `-v, --verbose`           | Enable verbose logging to see every URL being crawled. | `false`              |
-| `--ignore-robots`         | Ignore the `robots.txt` file and crawl all paths.      | `false`              |
-| `-h, --help`              | Display the help menu.                                 | -                    |
+| Flag                             | Description                                                     | Default              |
+| -------------------------------- | --------------------------------------------------------------- | -------------------- |
+| `-u, --url <url>`                | The base URL to start crawling from.                            | -                    |
+| `-s, --sitemap <url>`            | The URL of the sitemap.xml file to use for crawling.            | -                    |
+| `-l, --url-list <file>`          | File containing list of URLs to crawl (JSON or CSV).            | -                    |
+| `-k, --checks <list>`            | A comma-separated list of checks to run.                        | All available checks |
+| `-c, --concurrency <num>`        | The number of concurrent requests to make.                      | `5`                  |
+| `-o, --output <dir>`             | The directory where CSV reports will be saved.                  | `./results`          |
+| `-v, --verbose`                  | Enable verbose logging to see every URL being crawled.          | `false`              |
+| `--ignore-robots`                | Ignore the `robots.txt` file and crawl all paths.               | `false`              |
+| `--dedupe-images`                | Keep one occurrence of each image URL in `image-inventory.csv`. | `false`              |
+| `--image-suffix-pattern <regex>` | Remove a matching filename suffix before the final extension.   | -                    |
+| `-h, --help`                     | Display the help menu.                                          | -                    |
 
 ---
 
@@ -180,6 +213,7 @@ The tool generates the following CSV files in the specified output directory. Fi
 - `redirects.csv`: Lists all URLs that redirect with initial status codes and final destinations.
 - `seo-meta.csv`: One row per URL with extracted SEO metadata.
 - `crawl_errors.csv`: Lists all URLs that could not be crawled due to network or HTTP errors.
+- `image-inventory.csv`: Lists image URL occurrences found in HTML.
 
 > **Note:** Use the check key (e.g., `headings`, `images`) in the `--checks` CLI flag and to identify output files.
 

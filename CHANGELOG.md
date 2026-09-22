@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Image Inventory Check**: New `image-inventory` check lists image references found in HTML, with optional URL deduplication and filename suffix removal.
+
 ## v1.3.0
 
 ### Added

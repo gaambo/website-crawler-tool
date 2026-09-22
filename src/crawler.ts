@@ -7,6 +7,7 @@ import { parseSitemap } from "./sitemap-parser.js";
 import PageProcessor from "./page-processor.js";
 import RobotsHandler from "./robots-handler.js";
 import { Check, CheckIssueBase } from "./checks/index.js";
+import removeImageSuffix from "./image-url.js";
 import { CliUi } from "./cli-ui.js";
 
 interface CrawlerOptions {
@@ -19,6 +20,8 @@ interface CrawlerOptions {
   ignoreRobots?: boolean;
   checks: Check[]; // Array of enabled check objects
   availableChecksForOutput: Check[]; // All available check objects, for output headers
+  dedupeImages?: boolean;
+  imageSuffixPattern?: string;
 }
 
 interface CrawlResults {
@@ -46,6 +49,9 @@ class Crawler {
   private isNonRecursive: boolean;
   private isInteractiveTerminal: boolean;
   private ui: CliUi;
+  private dedupeImages: boolean;
+  private imageUrls: Set<string>;
+  private imageSuffixPattern?: RegExp;
 
   constructor(options: CrawlerOptions) {
     this.baseURL = options.url;
@@ -63,6 +69,17 @@ class Crawler {
     this.ignoreRobots = options.ignoreRobots || false;
     this.checks = options.checks;
     this.availableChecksForOutput = options.availableChecksForOutput;
+    this.dedupeImages = options.dedupeImages || false;
+    this.imageUrls = new Set<string>();
+    if (options.imageSuffixPattern) {
+      try {
+        this.imageSuffixPattern = new RegExp(
+          `(?:${options.imageSuffixPattern})$`
+        );
+      } catch (error: any) {
+        throw new Error(`Invalid image suffix pattern: ${error.message}`);
+      }
+    }
     this.isNonRecursive = !!options.urlList;
     this.isInteractiveTerminal = !!process.stdout.isTTY;
     this.ui = new CliUi({
@@ -243,7 +260,28 @@ class Crawler {
 
       for (const checkName in pageResults) {
         if (pageResults[checkName].length > 0) {
-          this.results[checkName].push(...pageResults[checkName]);
+          const checkResults =
+            checkName === "image-inventory"
+              ? pageResults[checkName]
+                  .map((result) => {
+                    if (!this.imageSuffixPattern) return result;
+                    return {
+                      ...result,
+                      imageUrl: removeImageSuffix(
+                        result.imageUrl,
+                        this.imageSuffixPattern
+                      ),
+                    };
+                  })
+                  .filter((result) => {
+                    if (!this.dedupeImages) return true;
+                    const imageUrl = result.imageUrl;
+                    if (!imageUrl || this.imageUrls.has(imageUrl)) return false;
+                    this.imageUrls.add(imageUrl);
+                    return true;
+                  })
+              : pageResults[checkName];
+          this.results[checkName].push(...checkResults);
         }
       }
       extractedLinks.forEach((link) => newLinksFound.add(link));
