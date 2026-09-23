@@ -8,6 +8,7 @@
     "website-crawler": "./dist/index.js"
   },
   "scripts": {
+    "prepare": "npm run build",
     "start": "npm run build && node dist/index.js",
     "build": "tsc",
     "dev": "tsx src/index.ts",

@@ -48,6 +48,23 @@ This tool is intended for use on websites that you own or have explicit permissi
     ```
     This installs all necessary dependencies for running and developing the tool.
 
+### Run Directly from GitHub with npx
+
+You can run the CLI without installing it from npm:
+
+```bash
+# Default branch
+npx --yes github:gaambo/website-crawler-tool --help
+
+# Main branch
+npx --yes github:gaambo/website-crawler-tool#main --help
+
+# Specific version tag
+npx --yes github:gaambo/website-crawler-tool#v1.3.0 --help
+```
+
+The repository builds automatically when installed from GitHub. Replace `--help` with any CLI options.
+
 ---
 
 ## Usage
